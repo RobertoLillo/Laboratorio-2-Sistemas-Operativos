@@ -1,5 +1,21 @@
 #include "../incl/functions.h"
 
+void inicioPrograma(int cantImagenes, char* nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados)
+{
+	//Prueba de llegada correcta de valores.
+	printf("Cantidad de imagenes: %d\n", cantImagenes);
+	printf("Nombre mascara: %s\n", nomMascara);
+	printf("Umbral: %d\n", umbNegro);
+	printf("Cantidad de hebras: %d\n", cantHebras);
+	printf("Tamano del buffer: %d\n", tamBuffer);
+	printf("Bandera: %d\n", bandResultados);
+
+
+
+
+	return;
+}
+
 void usoArgumentos(int numError, int cantError)
 {
 	switch (numError)

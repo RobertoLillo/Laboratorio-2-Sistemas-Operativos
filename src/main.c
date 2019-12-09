@@ -5,13 +5,13 @@ int main(int argc, char **argv)
 {
 	if (argc < 11)
 	{
-		usoArgumentos(1, 0);
+		usoArgumentos(1, 0); //La cantidad de argumentos ingresados no es la correcta.
 	}
 	else if (argc > 12)
 	{
-		usoArgumentos(1, 0);
+		usoArgumentos(1, 0); //La cantidad de argumentos ingresados no es la correcta.
 	}
-	else
+	else //La cantidad de argumentos esta dentro de lo esperado.
 	{
 		int opcion;
 		int contError = 0;
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 		int bflag = 0;
 
 		int cantImagenes, umbNegro, cantHebras, tamBuffer;
-		char *nombreMascara = NULL;
+		char *nomMascara = NULL;
 
 		while ((opcion = getopt(argc, argv, "c:m:n:h:t:b")) != -1)
 		{
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
 			case 'm':;
 				mflag = 1;
-				nombreMascara = optarg;
+				nomMascara = optarg;
 				break;
 
 			case 'n':
@@ -79,9 +79,14 @@ int main(int argc, char **argv)
 				contError++;
 			}
 		}
+
 		if (contError != 0)
 		{
-			usoArgumentos(2, contError);
+			usoArgumentos(2, contError); //Cierta cantidad de argumentos fueron ingresados incorrectamente.
+		}
+		else //Los argumentos fueron ingresados correctamente.
+		{
+			inicioPrograma(cantImagenes, nomMascara, umbNegro, cantHebras, tamBuffer, bflag);
 		}
 	}
 	return 0;
