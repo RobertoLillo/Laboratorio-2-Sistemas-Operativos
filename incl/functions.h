@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>   
 
-void inicioPrograma(int cantImagenes, char* nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados);
-void usoArgumentos(int numError, int cantError);
+void iniciarPipeline(int cantImagenes, char* nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados);
+void *prueba(void *arg);

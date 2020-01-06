@@ -1,53 +1,34 @@
 #include "../incl/functions.h"
 
-void inicioPrograma(int cantImagenes, char* nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados)
+// Variables globales
+
+
+// Funciones
+void iniciarPipeline(int cantImagenes, char* nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados)
 {
-	//Prueba de llegada correcta de valores.
-	printf("Cantidad de imagenes: %d\n", cantImagenes);
-	printf("Nombre mascara: %s\n", nomMascara);
-	printf("Umbral: %d\n", umbNegro);
-	printf("Cantidad de hebras: %d\n", cantHebras);
-	printf("Tamano del buffer: %d\n", tamBuffer);
-	printf("Bandera: %d\n", bandResultados);
-
-
-
-
-	return;
-}
-
-void usoArgumentos(int numError, int cantError)
-{
-	switch (numError)
+	int i;
+	pthread_t tids [cantHebras];
+	for (i = 0; i < cantHebras; i++)
 	{
-	case 1:
-		printf("La cantidad de argumentos ingresados no es la correcta.\n");
-		break;
-
-	case 2:
-		if (cantError == 1)
-		{
-			printf("%d argumento fue ingresado de forma incorrecta.\n", cantError);
-		}
-		else
-		{
-			printf("%d argumentos fueron ingresados de forma incorrecta.\n", cantError);
-		}
-		break;
-
-	default:
-		break;
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_create(&tids[i], &attr, prueba, &cantImagenes);
 	}
-
-	printf("\nEl formato correcto es el siguiente:\n");
-	printf("\t-c Cantidad de imagenes.\n");
-	printf("\t-m nombre del archivo de mascara.\n");
-	printf("\t-n umbral de negrura.\n");
-	printf("\t-h cantidad de hebras.\n");
-	printf("\t-t tamano del buffer.\n");
-	printf("\t-b bandera para mostrar resultados por pantalla.\n");
-	printf("\n El siguiente corresponde a un ejemplo:\n");
-	printf("\t./lab.out -c 3 -m mascara.txt -n 80 -h 10 -t 10 -b\n");
+	for (i = 0; i < cantHebras; i++)
+	{
+		pthread_join(tids[i], NULL); 
+	}
+	printf("termine\n");
 
 	return;
+} 
+
+void *prueba(void *arg)
+{
+	int *valor = (int *) arg;
+	int valor2 = *valor;
+
+	printf("funciona\n");
+
+	pthread_exit(0);
 }
