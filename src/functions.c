@@ -1,33 +1,35 @@
 #include "../incl/functions.h"
 
-// Variables globales
+// Variables globales.
 
-
-// Funciones
-void iniciarPipeline(int cantImagenes, char* nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados)
+// Funciones.
+void iniciarPipeline(int cantImagenes, char *nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados)
 {
 	int i;
-	pthread_t tids [cantHebras];
+
+	// Creación de cada thread.
+	pthread_t tids[cantHebras];
 	for (i = 0; i < cantHebras; i++)
 	{
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
-		pthread_create(&tids[i], &attr, prueba, &cantImagenes);
+		pthread_create(&tids[i], &attr, pipeline, &cantHebras); // El tercer atributo es un puntero a función.
 	}
+
+	// Espacio para hacer otras cosas.
+
+	// Esperar hasta que cada thread termine.
 	for (i = 0; i < cantHebras; i++)
 	{
-		pthread_join(tids[i], NULL); 
+		pthread_join(tids[i], NULL);
 	}
 	printf("termine\n");
 
 	return;
-} 
+}
 
-void *prueba(void *arg)
+void *pipeline(void *argumento)
 {
-	int *valor = (int *) arg;
-	int valor2 = *valor;
-
 	printf("funciona\n");
 
 	pthread_exit(0);
