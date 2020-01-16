@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 		}
 		else // Los argumentos fueron ingresados correctamente.
 		{
-			iniciarPipeline(cantImagenes, nomMascara, umbNegro, cantHebras, tamBuffer, bflag);
+			hebraProductora(cantImagenes, nomMascara, umbNegro, cantHebras, tamBuffer, bflag);
 		}
 	}
 	return 0;

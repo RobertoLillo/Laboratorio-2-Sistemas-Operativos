@@ -35,14 +35,14 @@ OBJECTS := $(patsubst $(SRC)%.c, $(OBJ)%.o, $(SOURCES))
 
 all: clean main
 	
-	@echo "$(PUR_COLOR)Ejecutable generado!$(NO_COLOR) Nombre: $(OK_COLOR)$(EXE_NAME)$(NO_COLOR) "
-	@echo "\n"
+	@echo "$(PUR_COLOR)Ejecutable generado:$(NO_COLOR) $(OK_COLOR)$(EXE_NAME)$(NO_COLOR) "
+	@echo 
 
 main: $(OBJECTS)
-	@echo "Generando ejecutable ..."
-	($(CC) $^ -g -lm -L$(INCLUDE_DIR) -pthread $(DEBUG_MODE) -o $(EXE_NAME) && echo "$(OK_COLOR)[OK]$(NO_COLOR)") \
+	@echo "Se genera nuevo $(WARN_COLOR).o$(NO_COLOR) y $(WARN_COLOR).out$(NO_COLOR)"
+	($(CC) $^ -g -lm -L$(INCLUDE_DIR) -pthread -lpng $(DEBUG_MODE) -o $(EXE_NAME)) \
 		||  (echo "$(ERROR_COLOR)[ERROR]$(NO_COLOR)" && exit 1; )
-	@echo "\n"
+	@echo 
 	
 
 debug: set-debug
@@ -61,28 +61,19 @@ main-debug: $(OBJECTS)
 	@echo "\n"
 
 $(OBJ)%.o: $(SRC)%.c
-	@echo "Generando archivos object de $@ ...."
-	($(CC) $(DEBUG_MODE) -g -lm -lpthread -I$(SRC) -c $< -o $@ && echo "$(OK_COLOR)[OK]$(NO_COLOR)") \
+	($(CC) $(DEBUG_MODE) -g -lm -lpthread -I$(SRC) -c $< -o $@) \
 		||  (echo "$(ERROR_COLOR)[ERROR]$(NO_COLOR)" && exit 1; )
 	
 clean: 
 	
-	@echo "\n"
-	@echo "Eliminado $(WARN_COLOR).out$(NO_COLOR) antiguo..."
+	@echo 
+	@echo "Eliminado antiguo $(WARN_COLOR).o$(NO_COLOR) y $(WARN_COLOR).out$(NO_COLOR)"
 	@echo >> rm.out
-
-
-	($(CLEAN_COMMAND) *.out && echo "$(OK_COLOR)[OK]$(NO_COLOR)") \
+	($(CLEAN_COMMAND) *.out) \
 		||  (echo "$(ERROR_COLOR)[ERROR]$(NO_COLOR)" && exit 1; ) 
-
-
-	@echo "Eliminado $(WARN_COLOR).o$(NO_COLOR) desactualizados..."
 	@echo >> $(OBJ)rm.o
-
-	($(CLEAN_COMMAND) $(OBJ)*.o && echo "$(OK_COLOR)[OK]$(NO_COLOR)") \
-		||  (echo "$(ERROR_COLOR)[ERROR]$(NO_COLOR)" && exit 1; ) 
-
-	@echo "Limpieza de archivos residuales $(OK_COLOR)completa!!$(NO_COLOR)"
-	@echo "$(PUR_COLOR)-------------------------------------------------------$(NO_COLOR)"
+	($(CLEAN_COMMAND) $(OBJ)*.o) \
+		||  (echo "$(ERROR_COLOR)[ERROR]$(NO_COLOR)" && exit 1; )
+	@echo
 
 .SILENT: clean all make main $(OBJ)%.o $(SOURCES) $(OBJECTS) main-child $(SRC)%.c main-debug
