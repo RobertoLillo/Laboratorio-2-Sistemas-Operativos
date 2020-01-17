@@ -6,6 +6,10 @@
 void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados)
 {
     int i, j, k, l;
+    
+    // ###################################
+    // # Proceso de lectura de la imagen #
+    // ###################################
     FILE *fp;
     png_structp pngPtr;
     png_infop infoPtr;
@@ -14,19 +18,6 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
     png_bytepp filas;
     png_bytep fila;
     png_byte pixel;
-
-    // Creación de cada thread.
-    /*pthread_t tids[cantHebras];
-    for (i = 0; i < cantHebras; i++)
-    {
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_create(&tids[i], &attr, hebraConsumidora, &cantHebras); // El tercer atributo es un puntero a función.
-    }*/
-
-    // ###################################
-    // # Proceso de lectura de la imagen #
-    // ###################################
 
     // Estructura que será entregada a las hebras.
     trozoImagen trozos[cantHebras];
@@ -46,12 +37,10 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
         png_get_IHDR(pngPtr, infoPtr, &ancho, &alto, NULL, NULL, NULL, NULL, NULL);
         filas = png_get_rows(pngPtr, infoPtr);
 
+        int alturaTrozo = (int)(alto / cantHebras);             // Trunca el excedente.
+        int alturaLeer = (int)(alto / cantHebras) * cantHebras; // Trunca el excedente.
+
         // Se guardan las direcciones de los segmentos de imagen en la variable trozos.
-        int alturaTrozo = (int)(alto / cantHebras);
-
-        printf("alto: %d\n", alto);
-        printf("alturaTrozo: %d\n", alturaTrozo);
-
         for (i = 0; i < cantHebras; i++)
         {
             int *fragmentoImagen = (int *)malloc(alturaTrozo * ancho * sizeof(int));
@@ -60,7 +49,7 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
         }
 
         // Buffer que acumulará filas hasta que se llene.
-        int buffer[tamBuffer][ancho];
+        int *buffer = (int *)malloc(tamBuffer * ancho * sizeof(int));
 
         int contadorBuffer = 0; // Para verificar cuando se llena el buffer.
         int contadorTrozos = 0; // Para verificar cuando se terminó de llenar trozo de una hebra.
@@ -68,7 +57,7 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
         int auxX = 0; // Auxiliar para moverse en eje X dentro de la matriz dentro de la hebra.
         int auxY = 0; // Auxiliar para moverse en eje Y dentro de la matriz dentro de la hebra.
 
-        for (i = 0; i < alto; i++)
+        for (i = 0; i < alturaLeer; i++) // Proceso de llenado de buffers y hebras.
         {
             if (contadorBuffer < tamBuffer) // Llenar buffer.
             {
@@ -76,9 +65,33 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
                 for (j = 0; j < ancho; j++)
                 {
                     pixel = fila[j];
-                    buffer[contadorBuffer][j] = pixel;
+                    *(buffer + contadorBuffer * ancho + j) = pixel;
                 }
                 contadorBuffer++;
+                if (i == alturaLeer - 1) // Se terminaron las filas para leer de la imagen.
+                {
+                    for (k = 0; k < contadorBuffer; k++)
+                    {
+                        if (trozos[contadorTrozos].filasOcupadas < alturaTrozo)
+                        {
+                            for (l = 0; l < ancho; l++)
+                            {
+                                *(trozos[contadorTrozos].matriz + auxY * ancho + auxX) = *(buffer + k * ancho + l);
+                                auxX++;
+                            }
+                            auxX = 0;
+                            auxY++;
+                            trozos[contadorTrozos].filasOcupadas++;
+                        }
+                        else // En el caso que se haya completado el fragmento correspondiente a una hebra.
+                        {
+                            contadorTrozos++; // Se cambia a la siguiente hebra.
+                            auxX = 0;
+                            auxY = 0;
+                            k--;
+                        }
+                    }
+                }
             }
             else // Vaciar buffer.
             {
@@ -88,9 +101,8 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
                     {
                         for (l = 0; l < ancho; l++)
                         {
-                            *(trozos[contadorTrozos].matriz + auxY * ancho + auxX) = buffer[k][l];
+                            *(trozos[contadorTrozos].matriz + auxY * ancho + auxX) = *(buffer + k * ancho + l);
                             auxX++;
-                            printf("k: %d, l: %d, auxY: %d, auxX: %d\n", k, l, auxY, auxX);
                         }
                         auxX = 0;
                         auxY++;
@@ -105,54 +117,40 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
                     }
                 }
                 contadorBuffer = 0;
+                i--;
             }
         }
 
-        /*for (i = 0; i < cantHebras; i++)
+        int a;
+        for (a = 0; a < cantHebras; a++)
+        {
+            for (i = 0; i < alturaTrozo; i++)
+            {
+                for (j = 0; j < ancho; j++)
+                {
+                    printf("|%d", *(trozos[a].matriz + i * ancho + j));
+                }
+                printf("|\n");
+            }
+        }
+
+        // Creación de cada thread.
+        /*
+        pthread_t tids[cantHebras];
+        for (i = 0; i < cantHebras; i++)
+        {
+            pthread_attr_t attr;
+            pthread_attr_init(&attr);
+            pthread_create(&tids[i], &attr, hebraConsumidora, &cantHebras); // El tercer atributo es un puntero a función.
+        }
+        */
+
+        /*
+        for (i = 0; i < cantHebras; i++)
         {
             printf("altura hebra %d: %d\n", i + 1, trozos[i].filasOcupadas);
-        }*/
-
-        for (i = 0; i < alturaTrozo; i++)
-        {
-            for (j = 0; j < ancho; j++)
-            {
-                printf("|%d", *(trozos[0].matriz + i * ancho + j));
-            }
-            printf("|\n");
         }
-        for (i = 0; i < alturaTrozo; i++)
-        {
-            for (j = 0; j < ancho; j++)
-            {
-                printf("|%d", *(trozos[1].matriz + i * ancho + j));
-            }
-            printf("|\n");
-        }
-        for (i = 0; i < alturaTrozo; i++)
-        {
-            for (j = 0; j < ancho; j++)
-            {
-                printf("|%d", *(trozos[2].matriz + i * ancho + j));
-            }
-            printf("|\n");
-        }
-        for (i = 0; i < alturaTrozo; i++)
-        {
-            for (j = 0; j < ancho; j++)
-            {
-                printf("|%d", *(trozos[3].matriz + i * ancho + j));
-            }
-            printf("|\n");
-        }
-        for (i = 0; i < alturaTrozo; i++)
-        {
-            for (j = 0; j < ancho; j++)
-            {
-                printf("|%d", *(trozos[4].matriz + i * ancho + j));
-            }
-            printf("|\n");
-        }
+        */
 
         fclose(fp);
         img++;
