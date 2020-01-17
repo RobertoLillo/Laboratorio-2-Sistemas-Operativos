@@ -6,19 +6,6 @@
 void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantHebras, int tamBuffer, int bandResultados)
 {
     int i, j, k, l;
-
-    // Creación de cada thread.
-    pthread_t tids[cantHebras];
-    for (i = 0; i < cantHebras; i++)
-    {
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_create(&tids[i], &attr, hebraConsumidora, &cantHebras); // El tercer atributo es un puntero a función.
-    }
-
-    // ###################################
-    // # Proceso de lectura de la imagen #
-    // ###################################
     FILE *fp;
     png_structp pngPtr;
     png_infop infoPtr;
@@ -27,6 +14,22 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
     png_bytepp filas;
     png_bytep fila;
     png_byte pixel;
+
+    // Creación de cada thread.
+    /*pthread_t tids[cantHebras];
+    for (i = 0; i < cantHebras; i++)
+    {
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_create(&tids[i], &attr, hebraConsumidora, &cantHebras); // El tercer atributo es un puntero a función.
+    }*/
+
+    // ###################################
+    // # Proceso de lectura de la imagen #
+    // ###################################
+
+    // Estructura que será entregada a las hebras.
+    trozoImagen trozos[cantHebras];
 
     int img = 1;
     char nombre[15];
@@ -43,45 +46,70 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
         png_get_IHDR(pngPtr, infoPtr, &ancho, &alto, NULL, NULL, NULL, NULL, NULL);
         filas = png_get_rows(pngPtr, infoPtr);
 
+        // Se guardan las direcciones de los segmentos de imagen en la variable trozos.
+        int alturaTrozo = (int)(alto / cantHebras);
+        printf("alturaTrozo: %d\n", alturaTrozo);
+        for (i = 0; i < cantHebras; i++)
+        {
+            int *fragmentoImagen = (int *)malloc(alturaTrozo * ancho * sizeof(int));
+            trozos[i].matriz = fragmentoImagen;
+            trozos[i].filasOcupadas = 0; // Para verificar cuando se llena el fragmento.
+        }
+
+        // Buffer que acumulará filas hasta que se llene.
         int buffer[tamBuffer][ancho];
 
-        int contBuffer = 0;
+        int contadorBuffer = 0; // Para verificar cuando se llena el buffer.
+        int contadorTrozos = 0; // Para verificar cuando se terminó de llenar trozo de una hebra.
+
         for (i = 0; i < alto; i++)
         {
-            if (contBuffer < tamBuffer)
+            if (contadorBuffer < tamBuffer)
             {
                 fila = filas[i];
                 for (j = 0; j < ancho; j++)
                 {
                     pixel = fila[j];
-                    buffer[contBuffer][j] = pixel;
+                    buffer[contadorBuffer][j] = pixel;
                 }
-                contBuffer++;
+                contadorBuffer++;
             }
             else
             {
                 for (k = 0; k < tamBuffer; k++)
                 {
-                    for (l = 0; l < ancho; l++)
+                    if (trozos[contadorTrozos].filasOcupadas < alturaTrozo)
                     {
-                        printf("%d", buffer[k][l]);
+                        for (l = 0; l < ancho; l++)
+                        {
+                            *(trozos[contadorTrozos].matriz + k * ancho + l) = buffer[k][l];
+                        }
+                        trozos[contadorTrozos].filasOcupadas++;
                     }
-                    printf("\n");
+                    else // En el caso que se haya completado el fragmento correspondiente a una hebra.
+                    {
+                        contadorTrozos++;
+                        k--;
+                    }
                 }
-                printf("Vaciar buffer\n");
-                contBuffer = 0;
+                contadorBuffer = 0;
             }
         }
-        fclose(fp);
 
+        for (i = 0; i < cantHebras; i++)
+        {
+            printf("altura hebra %d: %d\n", i + 1,trozos[i].filasOcupadas);
+        }
+
+        fclose(fp);
         img++;
     }
 
     // Esperar hasta que cada thread termine.
-    for (i = 0; i < cantHebras; i++)
+    /*for (i = 0; i < cantHebras; i++)
     {
         pthread_join(tids[i], NULL);
-    }
+    }*/
 
     printf("termine\n");
 
