@@ -48,7 +48,10 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
 
         // Se guardan las direcciones de los segmentos de imagen en la variable trozos.
         int alturaTrozo = (int)(alto / cantHebras);
+
+        printf("alto: %d\n", alto);
         printf("alturaTrozo: %d\n", alturaTrozo);
+
         for (i = 0; i < cantHebras; i++)
         {
             int *fragmentoImagen = (int *)malloc(alturaTrozo * ancho * sizeof(int));
@@ -62,9 +65,12 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
         int contadorBuffer = 0; // Para verificar cuando se llena el buffer.
         int contadorTrozos = 0; // Para verificar cuando se terminó de llenar trozo de una hebra.
 
+        int auxX = 0; // Auxiliar para moverse en eje X dentro de la matriz dentro de la hebra.
+        int auxY = 0; // Auxiliar para moverse en eje Y dentro de la matriz dentro de la hebra.
+
         for (i = 0; i < alto; i++)
         {
-            if (contadorBuffer < tamBuffer)
+            if (contadorBuffer < tamBuffer) // Llenar buffer.
             {
                 fila = filas[i];
                 for (j = 0; j < ancho; j++)
@@ -74,7 +80,7 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
                 }
                 contadorBuffer++;
             }
-            else
+            else // Vaciar buffer.
             {
                 for (k = 0; k < tamBuffer; k++)
                 {
@@ -82,13 +88,19 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
                     {
                         for (l = 0; l < ancho; l++)
                         {
-                            *(trozos[contadorTrozos].matriz + k * ancho + l) = buffer[k][l];
+                            *(trozos[contadorTrozos].matriz + auxY * ancho + auxX) = buffer[k][l];
+                            auxX++;
+                            printf("k: %d, l: %d, auxY: %d, auxX: %d\n", k, l, auxY, auxX);
                         }
+                        auxX = 0;
+                        auxY++;
                         trozos[contadorTrozos].filasOcupadas++;
                     }
                     else // En el caso que se haya completado el fragmento correspondiente a una hebra.
                     {
-                        contadorTrozos++;
+                        contadorTrozos++; // Se cambia a la siguiente hebra.
+                        auxX = 0;
+                        auxY = 0;
                         k--;
                     }
                 }
@@ -96,9 +108,50 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
             }
         }
 
-        for (i = 0; i < cantHebras; i++)
+        /*for (i = 0; i < cantHebras; i++)
         {
-            printf("altura hebra %d: %d\n", i + 1,trozos[i].filasOcupadas);
+            printf("altura hebra %d: %d\n", i + 1, trozos[i].filasOcupadas);
+        }*/
+
+        for (i = 0; i < alturaTrozo; i++)
+        {
+            for (j = 0; j < ancho; j++)
+            {
+                printf("|%d", *(trozos[0].matriz + i * ancho + j));
+            }
+            printf("|\n");
+        }
+        for (i = 0; i < alturaTrozo; i++)
+        {
+            for (j = 0; j < ancho; j++)
+            {
+                printf("|%d", *(trozos[1].matriz + i * ancho + j));
+            }
+            printf("|\n");
+        }
+        for (i = 0; i < alturaTrozo; i++)
+        {
+            for (j = 0; j < ancho; j++)
+            {
+                printf("|%d", *(trozos[2].matriz + i * ancho + j));
+            }
+            printf("|\n");
+        }
+        for (i = 0; i < alturaTrozo; i++)
+        {
+            for (j = 0; j < ancho; j++)
+            {
+                printf("|%d", *(trozos[3].matriz + i * ancho + j));
+            }
+            printf("|\n");
+        }
+        for (i = 0; i < alturaTrozo; i++)
+        {
+            for (j = 0; j < ancho; j++)
+            {
+                printf("|%d", *(trozos[4].matriz + i * ancho + j));
+            }
+            printf("|\n");
         }
 
         fclose(fp);
@@ -110,8 +163,6 @@ void hebraProductora(int cantImagenes, char *nomMascara, int umbNegro, int cantH
     {
         pthread_join(tids[i], NULL);
     }*/
-
-    printf("termine\n");
 
     return;
 }
