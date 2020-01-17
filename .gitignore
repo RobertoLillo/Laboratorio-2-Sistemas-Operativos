@@ -4,3 +4,6 @@
 # Executables
 *.exe
 *.out
+
+# Others
+*.ppm
